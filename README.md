@@ -94,7 +94,7 @@ detected `SIG1` object. To update the bouncing box on the display, first the
 display needs to be cleared and than the bouncing box can be redrawn.
 
 Video:
-<iframe width="560" height="315" src="https://www.youtube.com/embed/b2LZpY1qbKE" frameborder="0" allowfullscreen=""></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/b2LZpY1qbKE" frameborder="0" allowfullscreen></iframe>
 
 
 ### Example 2 - Chasing an object with Pixy
@@ -107,7 +107,7 @@ tutorial about the LEGO chase demo on the
 [Pixi wiki](https://docs.pixycam.com/wiki/doku.php?id=wiki:v1:lego_chase_demo).
 
 Video:
-<iframe width="560" height="315" src="https://www.youtube.com/embed/cDimWUEDwPU" frameborder="0" allowfullscreen=""></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/cDimWUEDwPU" frameborder="0" allowfullscreen></iframe>
 
 ---
 
@@ -231,7 +231,7 @@ in example 1.
 
 
 Video:
-<iframe width="560" height="315" src="https://www.youtube.com/embed/Wo6f2eQZVSY" frameborder="0" allowfullscreen=""></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Wo6f2eQZVSY" frameborder="0" allowfullscreen></iframe>
 
 ### Example 4 - Chasing an object with Pixy2
 
@@ -241,7 +241,7 @@ This is the same as example 2, but this time for Pixy2. It's pretty
 straightforwarded when you understand the previous examples.
 
 Video:
-<iframe width="560" height="315" src="https://www.youtube.com/embed/iy7fy2fAHsc" frameborder="0" allowfullscreen=""></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/iy7fy2fAHsc" frameborder="0" allowfullscreen></iframe>
 
 ---
 
