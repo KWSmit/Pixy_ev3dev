@@ -93,9 +93,7 @@ the program calculates the size and shape of the bouncing box of the largest
 detected `SIG1` object. To update the bouncing box on the display, first the
 display needs to be cleared and than the bouncing box can be redrawn.
 
-Video:
-<iframe width="560" height="315" src="https://www.youtube.com/embed/b2LZpY1qbKE" frameborder="0" allowfullscreen></iframe>
-
+See [video](https://www.youtube.com/embed/b2LZpY1qbKE) on YouTube.
 
 ### Example 2 - Chasing an object with Pixy
 
@@ -106,8 +104,7 @@ follow an object. To understand what is happening in this program, read the
 tutorial about the LEGO chase demo on the
 [Pixi wiki](https://docs.pixycam.com/wiki/doku.php?id=wiki:v1:lego_chase_demo).
 
-Video:
-<iframe width="560" height="315" src="https://www.youtube.com/embed/cDimWUEDwPU" frameborder="0" allowfullscreen></iframe>
+See [video](https://www.youtube.com/embed/cDimWUEDwPU) on YouTube.
 
 ---
 
@@ -230,8 +227,7 @@ in example 1.
 > the values from the Pixy2!
 
 
-Video:
-<iframe width="560" height="315" src="https://www.youtube.com/embed/Wo6f2eQZVSY" frameborder="0" allowfullscreen></iframe>
+See [video](https://www.youtube.com/embed/Wo6f2eQZVSY) on YouTube.
 
 ### Example 4 - Chasing an object with Pixy2
 
@@ -240,8 +236,7 @@ Sourcecode: /Pixy2/pixy2_chaser.py
 This is the same as example 2, but this time for Pixy2. It's pretty
 straightforwarded when you understand the previous examples.
 
-Video:
-<iframe width="560" height="315" src="https://www.youtube.com/embed/iy7fy2fAHsc" frameborder="0" allowfullscreen></iframe>
+See [video](https://www.youtube.com/embed/iy7fy2fAHsc) on YouTube.
 
 ---
 
