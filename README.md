@@ -305,11 +305,12 @@ this python script to run the program.
 - robot.py - all sourcecode to control the robot.
 
 When running this program, the robot will folow a line and detect
-intersections and barcodes. Use the barcode to stop or start the robot,
-to let the robot turn 180 degrees, or to set the vector to use when
-it encounters an intersection (go straight forward, left or right).
-You can download the barcodes from the website of
-[pixycam.com](https://pixycam.com/downloads-pixy2/).
+intersections and barcodes. Use the barcode to stop or start the robot
+or to set the vector to use when it encounters an intersection (go
+straight forward, left or right). You can download the barcodes from
+the website of [pixycam.com](https://pixycam.com/downloads-pixy2/).
+
+See [video](https://www.youtube.com/embed/bdp8iYrhdeY) on YouTube.
 
 ---
 

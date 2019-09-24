@@ -1,4 +1,4 @@
-''' Classes for pixy2 data.
+""" Classes for pixy2 data.
 
 Note: for i2c communication two modules are used at the moment:
       - smbus2 for most requests
@@ -11,7 +11,7 @@ Note: for i2c communication two modules are used at the moment:
       and smbus2 doesn't accept negative values.
       Further investigation is required to find solution that is only using
       one module for i2c communication.
-'''
+"""
 from smbus2 import SMBusWrapper, i2c_msg
 from smbus import SMBus
 
@@ -21,7 +21,6 @@ BARCODE_LEFT = 0
 BARCODE_RIGHT = 5
 BARCODE_DEACTIVATE = 12
 BARCODE_ACTIVATE = 13
-BARCODE_TURN = 14
 
 
 class Pixy2:
@@ -35,26 +34,26 @@ class Pixy2:
         self._next_turn = 0
 
     def lamp_on(self):
-        ''' Turn lamp on.'''
+        """Turn lamp on."""
         with SMBusWrapper(3) as bus:
             msg = i2c_msg.write(self.i2c_address, [174, 193, 22, 2, 1, 0])
             bus.i2c_rdwr(msg)
 
     def lamp_off(self):
-        ''' Turn lamp off.'''
+        """Turn lamp off."""
         with SMBusWrapper(3) as bus:
             msg = i2c_msg.write(self.i2c_address, [174, 193, 22, 2, 0, 0])
             bus.i2c_rdwr(msg)
 
     def set_mode(self, mode):
-        ''' Set mode for Pixy2.'''
+        """Set mode for Pixy2."""
         with SMBusWrapper(3) as bus:
             msg = i2c_msg.write(self.i2c_address, [174, 193, 54, 1, 0])
             bus.i2c_rdwr(msg)
         self._mode = mode
 
     def getdata(self):
-        ''' Get linetracking data form pixy2.'''
+        """Get linetracking data form pixy2."""
         # i2C r/w transaction
         msg_w = i2c_msg.write(self.i2c_address, [174, 193, 48, 2, 0, 7])
         msg_r = i2c_msg.read(self.i2c_address, 64)
@@ -63,7 +62,7 @@ class Pixy2:
         return msg_r
 
     def set_vector(self, index):
-        ''' Set vector for Pixy2 to follow.'''
+        """Set vector for Pixy2 to follow."""
         msg_w = i2c_msg.write(self.i2c_address, [174, 193, 56, 1, index])
         msg_r = i2c_msg.read(self.i2c_address, 10)
         with SMBusWrapper(3) as bus:
@@ -71,8 +70,22 @@ class Pixy2:
         return msg_r
 
     def set_next_turn(self, angle):
-        ''' Set direction robot has to take at intersection.'''
-        data = [174, 193, 58, 2, 0, angle]
+        """Set direction robot has to take at intersection."""
+        if angle >= 0:
+            data = [174, 193, 58, 2, angle, 0]
+        else:
+            data = [174, 193, 58, 2, angle, -1]
+        self.bus_smbus.write_i2c_block_data(self.i2c_address, 0, data)
+        msg_r = self.bus_smbus.read_i2c_block_data(self.i2c_address, 0, 10)
+        self._next_turn = angle
+        return msg_r
+
+    def set_default_turn(self, angle):
+        """"Set direction robot has to take at intersection."""
+        if angle >= 0:
+            data = [174, 193, 60, 2, angle, 0]
+        else:
+            data = [174, 193, 60, 2, angle, -1]
         self.bus_smbus.write_i2c_block_data(self.i2c_address, 0, data)
         msg_r = self.bus_smbus.read_i2c_block_data(self.i2c_address, 0, 10)
         self._next_turn = angle

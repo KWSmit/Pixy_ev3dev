@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 from math import degrees, atan2
 from time import sleep
+
 from pixy2 import (
     Pixy2,
     MainFeatures,
     parse_main_features,
     BARCODE_DEACTIVATE,
     BARCODE_ACTIVATE,
-    BARCODE_TURN,
     BARCODE_FORWARD,
     BARCODE_LEFT,
     BARCODE_RIGHT,
@@ -48,8 +48,6 @@ while not ev3.touch_4.value():
                 ev3.activate()
             elif data.barcodes[i].code == BARCODE_DEACTIVATE:
                 ev3.deactivate()
-            elif data.barcodes[i].code == BARCODE_TURN:
-                ev3.turn()
             elif data.barcodes[i].code == BARCODE_RIGHT:
                 pixy2.set_next_turn(-90)
                 ev3.set_leds_right()
@@ -60,21 +58,24 @@ while not ev3.touch_4.value():
         # Intersection found
         ev3.sound.beep()
     if data.number_of_vectors > 0:
+        # Check for intersection
+        if data.vectors[0].flags == 4:
+            # Intersection in sight, so slow down not to miss it
+            ev3.move_slow()
+            start_intersection = True
+        else:
+            # No intersection in sight, so fulll speed ahead
+            ev3.move_fast()
+            if start_intersection:
+                start_intersection = False
+                ev3.set_leds_default()
+        # Calculate speed out of offset in X-coördinate, using PID
         dx = X_REF - data.vectors[0].x1
         integral_x += dx
         derivative_x = dx -last_dx
         speed_x = KP*dx + KI*integral_x + KD*derivative_x
         last_dx = dx
-        if data.vectors[0].flags == 4:
-            # Intersection in sight, so slow down not to miss it
-            ev3.move(speed_x, 'slow')
-            start_intersection = True
-        else:
-            # No intersection in sight, so fulll speed ahead
-            ev3.move(speed_x, 'fast')
-            if start_intersection:
-                start_intersection = False
-                ev3.set_leds_default()
+        ev3.move(speed_x)
     else:
         # No data, stop robot
         ev3.stop()
@@ -83,3 +84,6 @@ while not ev3.touch_4.value():
 
 # Toggle lamp off
 pixy2.lamp_off()
+
+# Stop robot
+ev3.stop()
