@@ -1,18 +1,4 @@
-""" Classes for pixy2 data.
-
-Note: for i2c communication two modules are used at the moment:
-      - smbus2 for most requests
-      - smbus for setting default_turn and next_turn
-
-      smbus2 is used because smbus is limited to 32 bytes which is too short
-      for requesting mainFeatures.
-      But I can't get smbus2 working proberly to set default_turn and
-      next_turn. Values for both turns can range between -90 and 90 degrees
-      and smbus2 doesn't accept negative values.
-      Further investigation is required to find solution that is only using
-      one module for i2c communication.
-"""
-from smbus2 import SMBusWrapper, i2c_msg
+""" Classes and constants for pixy2 linetracking."""
 from smbus import SMBus
 
 # Barcode constants
@@ -27,7 +13,7 @@ class Pixy2:
     def __init__(self):
         # Set address for i2c communication (set on Pixy2 camera with PixyMon)
         self.i2c_address = 0x54
-        self.bus_smbus = SMBus(3)
+        self.smbus = SMBus(3)
         # Settings for linetraacking (see wiki Pixycam.com)
         self._mode = 0
         self._default_turn = 0
@@ -35,61 +21,124 @@ class Pixy2:
 
     def lamp_on(self):
         """Turn lamp on."""
-        with SMBusWrapper(3) as bus:
-            msg = i2c_msg.write(self.i2c_address, [174, 193, 22, 2, 1, 0])
-            bus.i2c_rdwr(msg)
+        request_block = [174, 193, 22, 2, 1, 0]
+        self.smbus.write_i2c_block_data(self.i2c_address, 0, request_block)
 
     def lamp_off(self):
         """Turn lamp off."""
-        with SMBusWrapper(3) as bus:
-            msg = i2c_msg.write(self.i2c_address, [174, 193, 22, 2, 0, 0])
-            bus.i2c_rdwr(msg)
+        request_block = [174, 193, 22, 2, 0, 0]
+        self.smbus.write_i2c_block_data(self.i2c_address, 0, request_block)
 
     def set_mode(self, mode):
         """Set mode for Pixy2."""
-        with SMBusWrapper(3) as bus:
-            msg = i2c_msg.write(self.i2c_address, [174, 193, 54, 1, 0])
-            bus.i2c_rdwr(msg)
+        request_block = [174, 193, 54, 1, mode]
+        self.smbus.write_i2c_block_data(self.i2c_address, 0, request_block)
         self._mode = mode
 
     def getdata(self):
         """Get linetracking data form pixy2."""
-        # i2C r/w transaction
-        msg_w = i2c_msg.write(self.i2c_address, [174, 193, 48, 2, 0, 7])
-        msg_r = i2c_msg.read(self.i2c_address, 64)
-        with SMBusWrapper(3) as bus:
-            bus.i2c_rdwr(msg_w, msg_r)
-        return msg_r
+
+        mainfeatures = MainFeatures()
+        vector = Vector()
+        intersection = Intersection()
+        branch = Branch()
+        barcode = Barcode()
+        payload_read = 0
+
+        # Request
+        request_block = [174, 193, 48, 2, 0, 7]
+        self.smbus.write_i2c_block_data(self.i2c_address, 0, request_block)
+
+        # Read header info
+        response = self.smbus.read_i2c_block_data(self.i2c_address, 0, 6)
+
+        # Parse header info
+        if response[2] == 49:
+            mainfeatures.type_of_packet = response[2]
+        else:
+            mainfeatures.error = True
+            return mainfeatures
+        mainfeatures.length_of_payload = response[3]
+
+        # Read payload data
+        while payload_read < mainfeatures.length_of_payload:
+            # Read feature type and feature_length:
+            response = self.smbus.read_i2c_block_data(self.i2c_address, 0, 2)
+            feature_type = response[0]
+            feature_length = response[1]
+            # Read feature data
+            if feature_type == 1:
+                # Feature type is 'vector'
+                response = self.smbus.read_i2c_block_data(self.i2c_address,
+                                                          0, feature_length)
+                vector.x0 = response[0]
+                vector.y0 = response[1]
+                vector.x1 = response[2]
+                vector.y1 = response[3]
+                vector.index = response[4]
+                vector.flags = response[5]
+                mainfeatures.add_vector(vector)
+            elif feature_type == 2:
+                # feature type is 'intersection'
+                response = self.smbus.read_i2c_block_data(self.i2c_address,
+                                                          0, feature_length)
+                intersection.x = response[0]
+                intersection.y = response[1]
+                intersection.nr_of_branches = response[2]
+                for i in range(0, intersection.nr_of_branches):
+                    i4 = i*4
+                    branch.index = response[i4+0]
+                    branch.angle = response[14+1]
+                    branch.angle_byte1 = response[i4+2]
+                    branch.angle_byte2 = response[i4+3]
+                    intersection.add_branch(branch)
+                mainfeatures.add_intersection(intersection)
+            elif feature_type == 4:
+                # Feature type is 'barcode'
+                response = self.smbus.read_i2c_block_data(self.i2c_address,
+                                                          0, feature_length)
+                barcode.x = response[0]
+                barcode.y = response[1]
+                barcode.flags = response[2]
+                barcode.code = response[3]
+                mainfeatures.add_barcode(barcode)
+            else:
+                # Unknown feature type
+                mainfeatures.error = True
+
+            payload_read += feature_length + 2
+
+        # Return data
+        return mainfeatures
 
     def set_vector(self, index):
         """Set vector for Pixy2 to follow."""
-        msg_w = i2c_msg.write(self.i2c_address, [174, 193, 56, 1, index])
-        msg_r = i2c_msg.read(self.i2c_address, 10)
-        with SMBusWrapper(3) as bus:
-            bus.i2c_rdwr(msg_w, msg_r)
-        return msg_r
+        request_block = [174, 193, 56, 1, index]
+        self.smbus.write_i2c_block_data(self.i2c_address, 0, request_block)
+        response = self.smbus.read_i2c_block_data(self.i2c_address, 0, 10)
+        return response
 
     def set_next_turn(self, angle):
         """Set direction robot has to take at intersection."""
         if angle >= 0:
-            data = [174, 193, 58, 2, angle, 0]
+            request_block = [174, 193, 58, 2, angle, 0]
         else:
-            data = [174, 193, 58, 2, angle, -1]
-        self.bus_smbus.write_i2c_block_data(self.i2c_address, 0, data)
-        msg_r = self.bus_smbus.read_i2c_block_data(self.i2c_address, 0, 10)
+            request_block = [174, 193, 58, 2, angle, -1]
+        self.smbus.write_i2c_block_data(self.i2c_address, 0, request_block)
+        response = self.smbus.read_i2c_block_data(self.i2c_address, 0, 10)
         self._next_turn = angle
-        return msg_r
+        return response
 
     def set_default_turn(self, angle):
         """"Set direction robot has to take at intersection."""
         if angle >= 0:
-            data = [174, 193, 60, 2, angle, 0]
+            request_block = [174, 193, 60, 2, angle, 0]
         else:
-            data = [174, 193, 60, 2, angle, -1]
-        self.bus_smbus.write_i2c_block_data(self.i2c_address, 0, data)
-        msg_r = self.bus_smbus.read_i2c_block_data(self.i2c_address, 0, 10)
+            request_block = [174, 193, 60, 2, angle, -1]
+        self.smbus.write_i2c_block_data(self.i2c_address, 0, request_block)
+        response = self.smbus.read_i2c_block_data(self.i2c_address, 0, 10)
         self._next_turn = angle
-        return msg_r
+        return response
 
 
 class Vector:
@@ -187,63 +236,3 @@ class MainFeatures:
         self.vectors.clear()
         self.intersections.clear()
         self.barcodes.clear()
-
-
-def parse_pixy2_data(type, data):
-    if type == 49:
-        block = parse_main_features(data)
-        return block
-
-
-def parse_main_features(data):
-    main_features = MainFeatures()
-    vector = Vector()
-    intersection = Intersection()
-    branch = Branch()
-    barcode = Barcode()
-    main_features.length_of_payload = int.from_bytes(data.buf[3], 'little')
-    i_payload = 0
-    while i_payload < main_features.length_of_payload:
-        feature_type = int.from_bytes(data.buf[6+i_payload], 'little')
-        feature_length = int.from_bytes(data.buf[7+i_payload], 'little')
-        if feature_type == 1:
-            # Feature type is 'vector'
-            vector.x0 = int.from_bytes(data.buf[8+i_payload], 'little')
-            vector.y0 = int.from_bytes(data.buf[9+i_payload], 'little')
-            vector.x1 = int.from_bytes(data.buf[10+i_payload], 'little')
-            vector.y1 = int.from_bytes(data.buf[11+i_payload], 'little')
-            vector.index = int.from_bytes(data.buf[12+i_payload], 'little')
-            vector.flags = int.from_bytes(data.buf[13+i_payload], 'little')
-            main_features.add_vector(vector)
-        elif feature_type == 2:
-            # feature type is 'intersection'
-            intersection.x = int.from_bytes(data.buf[8+i_payload], 'little')
-            intersection.y = int.from_bytes(data.buf[9+i_payload], 'little')
-            intersection.nr_of_branches = int.from_bytes(
-                data.buf[10+i_payload], 'little')
-            for i in range(0, intersection.nr_of_branches):
-                ii = i_payload+4*i
-                branch.index = int.from_bytes(data.buf[12+ii],
-                                              byteorder='little', signed=False)
-                branch.angle = int.from_bytes(data.buf[14+ii]+data.buf[15+ii],
-                                              byteorder='little', signed=True)
-                branch.angle_byte1 = data.buf[14+ii]
-                branch.angle_byte2 = data.buf[15+ii]
-                intersection.add_branch(branch)
-            main_features.add_intersection(intersection)
-        elif feature_type == 4:
-            # Feature type is 'barcode'
-            barcode.x = int.from_bytes(data.buf[8+i_payload], 'little')
-            barcode.y = int.from_bytes(data.buf[9+i_payload], 'little')
-            barcode.flags = int.from_bytes(data.buf[10+i_payload], 'little')
-            barcode.code = int.from_bytes(data.buf[11+i_payload], 'little')
-            main_features.add_barcode(barcode)
-        else:
-            # Unknown feature type
-            main_features.error = True
-
-        # Update index in payload
-        i_payload += feature_length + 2
-
-    # Return data
-    return main_features

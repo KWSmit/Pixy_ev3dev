@@ -1,6 +1,6 @@
 # Tutorial how to use Pixy and Pixy2 on ev3dev operating system
 
-This tutorial contains explanation and sample code on how to use
+This tutorial contains an explanation and sample code on how to use
 Pixy and Pixy2 for LEGO Mindstorms on the ev3dev operating system.
 
 ## Tabel of contents
@@ -181,7 +181,7 @@ Now everything is set up to request and receive data form Pixy2. You
 can find the serial protocol on the
 [Pixy2 wiki](https://docs.pixycam.com/wiki/doku.php?id=wiki:v2:porting_guide)
 
-Each request starts with the same two bytes `175, 193`. The other bytes
+Each request starts with the same two bytes `174, 193`. The other bytes
 depend on the type of request. For instance, when you want to request the
 firmware version of the camera, your data packet will be:
 
@@ -278,24 +278,11 @@ This is an example how to implement linetracking, a new feature of Pixy2.
 Read the Pixy documentation to learn more about the implementation and
 understanding how to program this functionality.
 
-In the examples above we used module `smbus` to request and receive data
-from the camera. But `smbus` has one limitation that makes we can't use
-it for linetracking: it's limited to 32 bytes of data. For linetracking we use
-the `getMainFeatures` request, which can return more than 32 bytes of data.
-
-Therefore we use `smbus2` in the linetracking example. More information
-about `smbus2` can be found [here](https://pypi.org/project/smbus2/).
-Requesting the linetracking information is done this way:
-
-```python
-def getdata(self):
-    ''' Get linetracking data form pixy2.'''
-    msg_w = i2c_msg.write(self.i2c_address, [174, 193, 48, 2, 0, 7])
-    msg_r = i2c_msg.read(self.i2c_address, 64)
-    with SMBusWrapper(3) as bus:
-        bus.i2c_rdwr(msg_w, msg_r)
-    return msg_r
-```
+> For linetracking you have to be aware about one restriction of the `smbus`
+> module: it is limited to read 32 bytes of data at a time. The linetracking
+> datablock contains more bytes of data, so you cannot read it completely in
+> once. Therefore, first the header bytes are read, followed by the bytes
+> containing the feature data, one feature at a time.
 
 The linetracking example consists of three files:
 
