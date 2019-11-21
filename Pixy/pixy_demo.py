@@ -4,7 +4,7 @@
     This is a simple Python demo to show how to use the Pixy camera
     on the ev3dev operating system.
 
-    NOTE: this demo ifs for the first version of Pixy for LEGO Mindstorms.
+    NOTE: this demo is for the first version of Pixy for LEGO Mindstorms.
           Use pixy2_demo.py for Pixy2 for LEGO Mindstorms.
 
     Requirements:
@@ -20,12 +20,13 @@
     website: kwsmit.github.io
 '''
 
+from time import sleep
+
 from ev3dev2.display import Display
 from ev3dev2.sensor import Sensor, INPUT_1, INPUT_4
 from ev3dev2.sensor.lego import TouchSensor
 from ev3dev2.port import LegoPort
 
-from time import sleep
 
 # EV3 Display
 lcd = Display()
@@ -36,6 +37,7 @@ ts = TouchSensor(INPUT_4)
 # Set LEGO port for Pixy on input port 1
 in1 = LegoPort(INPUT_1)
 in1.mode = 'auto'
+# Wait 2 secs for the port to get ready
 sleep(2)
 
 # Connect Pixy camera
@@ -53,7 +55,7 @@ while not ts.value():
     w = pixy.value(3)     # Width of rectangle around detected object
     h = pixy.value(4)     # Heigth of rectangle around detected object
     # scale to resolution of EV3 display:
-    # Resolution Pixy2 while color tracking; (255x199)
+    # Resolution Pixy while color tracking; (255x199)
     # Resolution EV3 display: (178x128)
     x *= 0.7
     y *= 0.6

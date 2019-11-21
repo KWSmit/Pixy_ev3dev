@@ -3,7 +3,7 @@
 This tutorial contains an explanation and sample code on how to use
 Pixy and Pixy2 for LEGO Mindstorms on the ev3dev operating system.
 
-## Tabel of contents
+## Table of contents
 
 1. [Pixy for LEGO Mindstorms](#pixy-for-lego-mindstorms)
    - [Example 1 - Displaying detected object on EV3-LCD with Pixy](#example-1---displaying-detected-object-on-ev3-lcd-with-pixy)
@@ -32,16 +32,19 @@ This chapter explains how to use the first version of Pixy for LEGO Mindstorms.
 General information about Pixy can be found at the
 [Pixy-wiki](https://docs.pixycam.com/)
 
-### The basics
+### The basics for Pixy
 
 First, set the input port (in this case INPUT_1) in the right mode:
 
 ```python
+from time import sleep
+
 from ev3dev2.port import LegoPort
 
 # Set LEGO port for Pixy on input port 1
 in1 = LegoPort(INPUT_1)
 in1.mode = 'auto'
+# Wait 2 secs for the port to get ready
 sleep(2)
 ```
 
@@ -100,11 +103,11 @@ h = pixy.value(4)              # Height of the largest SIG1-object
 
 Sourcecode: /Pixy/pixy_demo.py
 
-In this example Pixy is set to mode `SIG1`. The program continuousy reads data
+In this example Pixy is set to mode `SIG1`. The program continuously reads data
 from the camera, until the TouchSensor is pressed. When valid data is received,
 the program calculates the size and shape of the bouncing box of the largest
 detected `SIG1` object. To update the bouncing box on the display, first the
-display needs to be cleared and than the bouncing box can be redrawn.
+display needs to be cleared and then the bouncing box can be redrawn.
 
 See [video](https://www.youtube.com/embed/b2LZpY1qbKE) on YouTube.
 
@@ -125,10 +128,10 @@ See [video](https://www.youtube.com/embed/cDimWUEDwPU) on YouTube.
 
 This chapter explains how to use the new Pixy2 for LEGO Mindstorms.
 
-### The basics
+### The basics for Pixy2
 
 One important difference with the old Pixy is that you have to use Pixy2
-without a driver. An easy way to do this is is by using the Python `smbus`
+without a driver. An easy way to do this is by using the Python `smbus`
 module for setting up direct `I2C` communication between the EV3 and
 the Pixy2.
 
@@ -138,12 +141,12 @@ on the `Interface` tab.
 
 > If you don't see the `Interface` tab, you're probably not running
 > the right firmware on the Pixy camera. Be sure to run the stock version,
-> instead of the LEGO version. See Pixy documentation how to install
-> firmware.
+> instead of the LEGO version. See
+[Pixy documentation](https://docs.pixycam.com/wiki/doku.php?id=wiki:v2:uploading_new_firmware) on how to install firmware.
 
 ![PixyMon configure dialog](/Images/PixyMon_configure.png)
 
-Set `Data out port` to `I2C` and `I2C addres`
+Set `Data out port` to `I2C` and `I2C address`
 to `0x54` (or any other address you like).
 
 In your Python script import the module `smbus`
@@ -158,6 +161,7 @@ Next set the EV3 input port to `'other-i2c'`:
 # Set LEGO port for Pixy2 on input port 1
 in1 = LegoPort(INPUT_1)
 in1.mode = 'other-i2c'
+# Short wait for port to get ready
 sleep(0.5)
 ```
 
@@ -172,14 +176,14 @@ Assume we're using port 1. Don't forget to use the same address
 as configured on the Pixy2:
 
 ```python
-# Settings for I2C (SMBus(3) for INPUT_1)
+# Settings for I2C (SMBus(3)) for INPUT_1
 bus = SMBus(3)
 address = 0x54
 ```
 
-Now everything is set up to request and receive data form Pixy2. You
+Now everything is set up to request and receive data from Pixy2. You
 can find the serial protocol on the
-[Pixy2 wiki](https://docs.pixycam.com/wiki/doku.php?id=wiki:v2:porting_guide)
+[Pixy2 wiki](https://docs.pixycam.com/wiki/doku.php?id=wiki:v2:porting_guide#pixy2-serial-protocol-packet-reference)
 
 Each request starts with the same two bytes `174, 193`. The other bytes
 depend on the type of request. For instance, when you want to request the
@@ -202,9 +206,9 @@ block = bus.read_i2c_block_data(address, 0, 13)
 ```
 
 The first parameter in this read function is the I2C-address of
-the camera. The second parameter is an offset, which we don't need, so
-set it to `0`. The third parameter is the number of bytes that the
-response contains. As you can see in the Pixy2 documentation, the version
+the camera. The second parameter is an offset, which is zero in this
+case. The third parameter is the number of bytes that the response
+contains. As you can see in the Pixy2 documentation, the version
 request returns 13 bytes. According to the documentation
 you find the major version in byte 8 and the minor in byte 9:
 
@@ -216,10 +220,12 @@ print('Firmware version: {}.{}\n'.format(str(block[8]), str(block[9])))
 
 Sourcecode: /Pixy2/pixy2_demo.py
 
-This is the same as exmple 1, but this time with the Pixy2. We like to detect
+This is the same as example 1, but this time with the Pixy2. We like to detect
 objects with signature 1 and display the bouncing box on the display of the
 EV3. For this we use `getBlocks()` to receive information about the detected
-object. The data packet for the request is like this:
+object (see
+[Pixy documentation](https://docs.pixycam.com/wiki/doku.php?id=wiki:v2:porting_guide#getblocks-sigmap-maxblocks)).
+The data packet for the request is like this:
 
 ```python
 data = [174, 193, 32, 2, sigs, 1]
@@ -286,7 +292,7 @@ understanding how to program this functionality.
 
 The linetracking example consists of three files:
 
-- linetracker.py - implemetation of the linetracking functionality. Start
+- linetracker.py - implementation of the linetracking functionality. Start
 this python script to run the program.
 - pixy2.py - all sourcecode for the pixy interface.
 - robot.py - all sourcecode to control the robot.
@@ -306,4 +312,4 @@ See [video](https://www.youtube.com/embed/bdp8iYrhdeY) on YouTube.
 - ev3dev: [www.ev3dev.org](https://www.ev3dev.org)
 - Pixy/Pixy2 general information: [www.pixycam.com](https://www.pixycam.com)
 - Pixy/Pixy2 documentation: [docs.pixycam.com](https://docs.pixycam.com)
-- my website: [Robots & More](https://kwsmit.github.io)
+- My website: [Robots & More](https://kwsmit.github.io)

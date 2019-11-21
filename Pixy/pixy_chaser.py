@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 ''' Demo how your robot can follow an object with Pixy for LEGO Mindstorms.
 
-    NOTE: this demo ifs for the first version of Pixy2 for LEGO Mindstorms.
+    NOTE: this demo is for the first version of Pixy2 for LEGO Mindstorms.
           Use pixy2_chaser.py for the new Pixy2 for LEGO Mindstorms.
 
     Requirements:
@@ -17,11 +17,12 @@
     website: kwsmit.github.io
 '''
 
+from time import sleep
+
 from ev3dev2.sensor import Sensor, INPUT_1, INPUT_4
 from ev3dev2.sensor.lego import TouchSensor
 from ev3dev2.motor import LargeMotor, OUTPUT_A, OUTPUT_B
 from ev3dev2.port import LegoPort
-from time import sleep
 
 
 def limit_speed(speed):
@@ -35,6 +36,7 @@ def limit_speed(speed):
 # Set LEGO port for Pixy on input port 1
 in1 = LegoPort(INPUT_1)
 in1.mode = 'auto'
+# Wait 2 secs for the port to get ready
 sleep(2)
 
 # Connect Pixy camera
